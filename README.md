@@ -37,6 +37,14 @@ RUN pip install -r requirements.txt
 COPY setup.cfg .
 COPY example_parser example_parser
 ```
+Alternatively, you can add a package tarball directly and install.
+```dockerfile
+FROM foreseeti/securicad-parser
+
+ADD dist/example-parser-*.tar.gz /parser
+RUN mv /parser/*/* .
+RUN pip install wheels/*.whl
+```
 
 A parser image can now be built and packaged into a TAR archive
 ```bash
@@ -47,3 +55,15 @@ and moved into the custom parser directory of a securiCAD Enterprise instance. T
 
 # Release
 Change version number in `setup.cfg`, run `./tools/scripts/create_image.sh`, and publish with `docker push example-parser:1.0.0`.
+
+# Running
+Environment variables containing the login for RabbitMQ must be provided. Together the host and its network. Additional files may be mounted to the container at runtime.
+```bash
+podman run \
+  --env RABBIT_USERNAME=... \
+  --env RABBIT_PASSWORD=... \
+  --env HOST=localhost \
+  --network host \
+  --mount type=bind,source=/home/es/bin/enterprise_suite/backend/lib/memorymodel.py,destination=/lib/memorymodel.py,readonly \
+  example-parser
+```

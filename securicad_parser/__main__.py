@@ -111,8 +111,12 @@ def main():
     config = ConfigParser()
     config.read("setup.cfg")
     name = config["metadata"]["name"]
-    display_name = config["enterprise_suite"].get("display_name", name)
-    extension = config["enterprise_suite"].get("extension")
+    if "enterprise_suite" in config:
+        display_name = config["enterprise_suite"].get("display_name", name)
+        extension = config["enterprise_suite"].get("extension")
+    else:
+        display_name = name
+        extension = None
 
     parser = typing.cast(
         Parser, importlib.import_module(config["options"]["packages"].strip())
@@ -124,24 +128,24 @@ def main():
 
     connection = BlockingConnection(
         ConnectionParameters(
-            host="host.docker.internal",
+            host=os.environ["HOST"],
             credentials=PlainCredentials(
                 os.environ["RABBIT_USERNAME"], os.environ["RABBIT_PASSWORD"]
             ),
         )
     )
 
-    parser_queue_name = "parser"
-    waiting_queue_name = f"{name}-waiting"
-    done_queue_name = f"{name}-done"
+    info_queue_name = "parser-info"
+    waiting_queue_name = f"parser-{name}"
+    result_queue_name = f"parser-result"
 
     channel: BlockingChannel = connection.channel()
-    channel.queue_declare(parser_queue_name)
+    channel.queue_declare(info_queue_name)
     channel.queue_declare(waiting_queue_name)
-    channel.queue_declare(done_queue_name)
+    channel.queue_declare(result_queue_name)
     channel.basic_publish(
         "",
-        parser_queue_name,
+        info_queue_name,
         json.dumps(
             {
                 "name": name,
@@ -154,7 +158,7 @@ def main():
 
     channel.basic_consume(
         waiting_queue_name,
-        callback(parser, sub_parsers, done_queue_name),
+        callback(parser, sub_parsers, result_queue_name),
         auto_ack=True,
     )
     channel.start_consuming()
