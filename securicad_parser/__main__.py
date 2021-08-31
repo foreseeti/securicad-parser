@@ -12,7 +12,7 @@ from configparser import ConfigParser
 from dataclasses import dataclass
 from io import StringIO
 from logging import StreamHandler
-from typing import Any, Callable, NamedTuple, Protocol
+from typing import Any, Callable, NamedTuple, Optional, Protocol
 
 from pika.adapters.blocking_connection import BlockingChannel, BlockingConnection
 from pika.connection import ConnectionParameters
@@ -56,7 +56,11 @@ class SubParser(Protocol):
 
 
 def callback(
-    parser: Parser, sub_parsers: dict[str, SubParser], queue_name: str
+    parser: Parser,
+    sub_parsers: dict[str, SubParser],
+    parser_name: str,
+    display_name: str,
+    extension: Optional[str],
 ) -> Callable[[BlockingChannel, Basic.Deliver, BasicProperties, bytes], None]:
     def _callback(
         channel: BlockingChannel,
@@ -64,6 +68,23 @@ def callback(
         properties: BasicProperties,
         body: bytes,
     ):
+        type_: Optional[str] = properties.type
+        queue: str = properties.reply_to
+        if type_ == "info":
+            channel.basic_publish(
+                "",
+                queue,
+                json.dumps(
+                    {
+                        "name": parser_name,
+                        "display_name": display_name,
+                        "extension": extension,
+                        "sub_parsers": list(sub_parsers.keys()),
+                    }
+                ),
+            )
+            return
+
         stream = StringIO()
         handler.setStream(stream)
         try:
@@ -78,7 +99,7 @@ def callback(
             with contextlib.redirect_stdout(stream), contextlib.redirect_stderr(stream):
                 channel.basic_publish(
                     "",
-                    queue_name,
+                    queue,
                     json.dumps(
                         parser.parse(
                             [
@@ -99,7 +120,7 @@ def callback(
             log.exception("parser exception")
             channel.basic_publish(
                 "",
-                queue_name,
+                queue,
                 stream.getvalue(),
                 BasicProperties(message_id=properties.message_id, type="error"),  # type: ignore
             )
@@ -135,30 +156,14 @@ def main():
         )
     )
 
-    info_queue_name = "parser-info"
-    waiting_queue_name = f"parser-{name}"
-    result_queue_name = f"parser-result"
-
+    queue = f"parser-{name}"
     channel: BlockingChannel = connection.channel()
-    channel.queue_declare(info_queue_name)
-    channel.queue_declare(waiting_queue_name)
-    channel.queue_declare(result_queue_name)
-    channel.basic_publish(
-        "",
-        info_queue_name,
-        json.dumps(
-            {
-                "name": name,
-                "display_name": display_name,
-                "extension": extension,
-                "sub_parsers": list(sub_parsers.keys()),
-            }
-        ),
-    )
+    channel.queue_declare(queue)
 
+    channel.basic_qos(prefetch_count=1)
     channel.basic_consume(
-        waiting_queue_name,
-        callback(parser, sub_parsers, result_queue_name),
+        queue,
+        callback(parser, sub_parsers, name, display_name, extension),
         auto_ack=True,
     )
     channel.start_consuming()

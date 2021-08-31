@@ -41,9 +41,9 @@ Alternatively, you can add a package tarball directly and install.
 ```dockerfile
 FROM foreseeti/securicad-parser
 
-ADD dist/example-parser-*.tar.gz /parser
-RUN mv /parser/*/* .
-RUN pip install wheels/*.whl
+ADD dist/example-parser-*.tar.gz .
+RUN mv /example-parser-*/* .
+RUN pip install --force-reinstall --ignore-installed --upgrade --no-index --no-deps wheels/*.whl
 ```
 
 A parser image can now be built and packaged into a TAR archive
