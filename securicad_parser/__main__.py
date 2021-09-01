@@ -19,7 +19,6 @@ from pika.connection import ConnectionParameters
 from pika.credentials import PlainCredentials
 from pika.spec import Basic, BasicProperties
 
-
 log = logging.getLogger()
 log.setLevel(logging.INFO)
 handler = StreamHandler(StringIO())
@@ -149,7 +148,7 @@ def main():
 
     connection = BlockingConnection(
         ConnectionParameters(
-            host=os.environ["HOST"],
+            host=os.environ["RABBIT_HOST"],
             credentials=PlainCredentials(
                 os.environ["RABBIT_USERNAME"], os.environ["RABBIT_PASSWORD"]
             ),
