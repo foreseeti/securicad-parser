@@ -20,7 +20,7 @@ The commit message shall be `Release <version>`, e.g. `Release 0.0.2`.
 
 ```
 $ git checkout -b max/release
-$ sed -i 's/^version = [^"]*$/version = 0.0.2/' setup.cfg
+$ sed -i 's/^version = .*$/version = 0.0.2/' setup.cfg
 $ ./tools/scripts/create_requirements.sh
 $ git add setup.cfg requirements.txt dev-requirements.txt
 $ git commit -m "Release 0.0.2"
