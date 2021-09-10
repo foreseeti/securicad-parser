@@ -1,4 +1,7 @@
-# Parser
+# securiCAD Parser
+A Docker image to build parsers for [foreseeti's securiCAD Enterprise](https://foreseeti.com/securicad-enterprise/).
+
+## Parser
 A parser is called through an exposed method
 ```python
 def parse(data: list[SubParserOutput], metadata: dict[str, Any]) -> dict[str, Any]:
@@ -17,7 +20,7 @@ def parse(data: bytes, metadata: dict[str, Any]) -> Any:
 ```
 securiCAD Enterprise will automatically run sub parsers, collect their output and pass it to the parser module.
 
-# Packaging for securiCAD Enterprise
+## Packaging for securiCAD Enterprise
 When packaging a parser for securiCAD Enterprise, `setup.cfg` must include information about sub parsers. It may also include a display name. You must also specify what package is included in the `packages` option.
 ```ini
 [options]
@@ -34,7 +37,7 @@ example-vul-parser = example_parser.vul_parser
 
 The `Dockerfile` should copy `setup.cfg` and the required files. As well as install every dependency.
 ```dockerfile
-FROM foreseeti/securicad-parser
+FROM ghcr.io/foreseeti/securicad-parser
 
 COPY requirements.txt .
 RUN pip install -r requirements.txt
@@ -44,7 +47,7 @@ COPY example_parser example_parser
 ```
 Alternatively, you can add a package tarball directly and install.
 ```dockerfile
-FROM foreseeti/securicad-parser
+FROM ghcr.io/foreseeti/securicad-parser
 
 ADD dist/example-parser-*.tar.gz .
 RUN mv example-parser-*/* ./
@@ -63,7 +66,7 @@ tar -czf langpack-example-parser.tar.gz image-example-parser.tar
 ```
 and moved into the custom parser directory of a securiCAD Enterprise instance. The parser is available after restarting backend.
 
-# Running
+## Running
 Environment variables containing the login for RabbitMQ must be provided. Together the host and its network. Additional files may be mounted to the container at runtime.
 ```bash
 podman run \
@@ -75,5 +78,11 @@ podman run \
   example-parser
 ```
 
-# Build
+## Build
 To build this docker image locally, run `./tools/scripts/create_image.sh`.
+
+## License
+
+Copyright © 2021 [Foreseeti AB](https://foreseeti.com)
+
+Licensed under the [Apache License, Version 2.0](https://www.apache.org/licenses/LICENSE-2.0)
