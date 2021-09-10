@@ -63,9 +63,6 @@ tar -czf langpack-example-parser.tar.gz image-example-parser.tar
 ```
 and moved into the custom parser directory of a securiCAD Enterprise instance. The parser is available after restarting backend.
 
-# Release
-Change version number in `setup.cfg`, run `./tools/scripts/create_image.sh`, and publish with `docker push example-parser:1.0.0`.
-
 # Running
 Environment variables containing the login for RabbitMQ must be provided. Together the host and its network. Additional files may be mounted to the container at runtime.
 ```bash
@@ -74,6 +71,9 @@ podman run \
   --env RABBIT_PASSWORD=... \
   --env RABBIT_HOST=localhost \
   --network host \
-  --mount type=bind,source=/home/es/bin/enterprise_suite/backend/lib/memorymodel.py,destination=/lib/memorymodel.py,readonly \
+  --volume /home/es/bin/enterprise_suite/backend/lib/memorymodel.py:/lib/memorymodel.py:ro,z \
   example-parser
 ```
+
+# Build
+To build this docker image locally, run `./tools/scripts/create_image.sh`.
