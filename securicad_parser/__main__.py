@@ -110,33 +110,34 @@ def callback(
                 ],
             )
             with contextlib.redirect_stdout(stream), contextlib.redirect_stderr(stream):
-                channel.basic_publish(
-                    "",
-                    queue,
-                    json.dumps(
-                        parser.parse(
-                            [
-                                SubParserOutput(
-                                    entry.sub_parser,
-                                    sub_parsers[entry.sub_parser].parse(
-                                        entry.data, message.metadata
-                                    ),
-                                )
-                                for entry in message.data
-                            ],
-                            message.metadata,
+                result = parser.parse(
+                    [
+                        SubParserOutput(
+                            entry.sub_parser,
+                            sub_parsers[entry.sub_parser].parse(
+                                entry.data, message.metadata
+                            ),
                         )
-                    ),
-                    BasicProperties(message_id=properties.message_id, type="success"),  # type: ignore
+                        for entry in message.data
+                    ],
+                    message.metadata,
                 )
+            result = json.dumps(result)
         except:
-            log.exception("parser exception")
             channel.basic_publish(
                 "",
                 queue,
                 stream.getvalue(),
                 BasicProperties(message_id=properties.message_id, type="error"),  # type: ignore
             )
+            return
+
+        channel.basic_publish(
+            "",
+            queue,
+            result,
+            BasicProperties(message_id=properties.message_id, type="success"),  # type: ignore
+        )
 
     return _callback
 
