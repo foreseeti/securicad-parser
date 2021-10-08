@@ -4,7 +4,7 @@
 #
 #    ./tools/scripts/create_requirements.sh
 #
-black==21.8b0
+black==21.9b0
     # via securicad-parser (setup.cfg)
 click==8.0.1
     # via black
@@ -16,9 +16,9 @@ pathspec==0.9.0
     # via black
 pika==1.2.0
     # via securicad-parser (setup.cfg)
-platformdirs==2.3.0
+platformdirs==2.4.0
     # via black
-regex==2021.8.28
+regex==2021.9.30
     # via black
 tomli==1.2.1
     # via black
