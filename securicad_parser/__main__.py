@@ -123,7 +123,6 @@ def callback(
                 )
             result = json.dumps(result)
         except:
-            log.info(stream.getvalue())
             channel.basic_publish(
                 "",
                 queue,
@@ -131,7 +130,8 @@ def callback(
                 BasicProperties(message_id=properties.message_id, type="error"),  # type: ignore
             )
             return
-        log.info(stream.getvalue())
+        finally:
+            log.info(stream.getvalue())
 
         channel.basic_publish(
             "",
