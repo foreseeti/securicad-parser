@@ -21,6 +21,7 @@ import importlib
 import json
 import logging
 import os
+import sys
 import typing
 from configparser import ConfigParser
 from dataclasses import dataclass
@@ -35,8 +36,7 @@ from pika.spec import Basic, BasicProperties
 
 log = logging.getLogger()
 log.setLevel(logging.INFO)
-handler = StreamHandler(StringIO())
-log.addHandler(handler)
+log.addHandler(StreamHandler(sys.stdout))
 
 
 @dataclass
@@ -99,7 +99,6 @@ def callback(
             return
 
         stream = StringIO()
-        handler.setStream(stream)
         try:
             data = json.loads(body)
             message = Message(
@@ -131,6 +130,8 @@ def callback(
                 BasicProperties(message_id=properties.message_id, type="error"),  # type: ignore
             )
             return
+        finally:
+            log.info(stream.getvalue())
 
         channel.basic_publish(
             "",
