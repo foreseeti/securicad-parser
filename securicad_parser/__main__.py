@@ -36,9 +36,7 @@ from pika.spec import Basic, BasicProperties
 
 log = logging.getLogger()
 log.setLevel(logging.INFO)
-log.addHandler(logging.StreamHandler(sys.stdout))
-handler = StreamHandler(StringIO())
-log.addHandler(handler)
+log.addHandler(StreamHandler(sys.stdout))
 
 
 @dataclass
@@ -101,7 +99,6 @@ def callback(
             return
 
         stream = StringIO()
-        handler.setStream(stream)
         try:
             data = json.loads(body)
             message = Message(
@@ -126,6 +123,7 @@ def callback(
                 )
             result = json.dumps(result)
         except:
+            log.info(stream.getvalue())
             channel.basic_publish(
                 "",
                 queue,
@@ -133,6 +131,7 @@ def callback(
                 BasicProperties(message_id=properties.message_id, type="error"),  # type: ignore
             )
             return
+        log.info(stream.getvalue())
 
         channel.basic_publish(
             "",
