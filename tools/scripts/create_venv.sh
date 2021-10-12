@@ -29,7 +29,7 @@ sync_requirements() {
 
 main() {
   create_venv
-  install_package pip
+  install_package pip==21.1
   install_package setuptools
   install_package wheel
   install_package pip-tools
