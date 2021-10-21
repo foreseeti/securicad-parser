@@ -22,6 +22,7 @@ import json
 import logging
 import os
 import sys
+import traceback
 import typing
 from configparser import ConfigParser
 from dataclasses import dataclass
@@ -123,6 +124,7 @@ def callback(
                 )
             result = json.dumps(result)
         except:
+            stream.write(traceback.format_exc())
             channel.basic_publish(
                 "",
                 queue,
